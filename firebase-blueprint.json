@@ -1,0 +1,171 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile with role-specific settings for Client, Salon, and Admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["client", "salon", "admin"] },
+        "avatar": { "type": "string" },
+        "points": { "type": "integer" },
+        "whatsapp": { "type": "string" },
+        "location": { "type": "string" },
+        "businessHours": { "type": "string" },
+        "isBanned": { "type": "boolean" },
+        "language": { "type": "string", "enum": ["pt", "en", "fr", "ar", "zu"] },
+        "theme": { "type": "string", "enum": ["rose", "purple", "blue", "dark"] },
+        "favoriteProducts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "rsvpEvents": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "redeemedRewards": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "CommunityPost": {
+      "title": "Community Post",
+      "description": "Discussion post in the beauty forum",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "author": { "type": "string" },
+        "avatar": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "image": { "type": "string" },
+        "category": { "type": "string" },
+        "likes": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "author": { "type": "string" },
+              "avatar": { "type": "string" },
+              "text": { "type": "string" },
+              "createdAt": { "type": "string" }
+            },
+            "required": ["id", "author", "text"]
+          }
+        },
+        "likedBy": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["id", "author", "title", "content", "category", "likes", "createdAt"]
+    },
+    "Product": {
+      "title": "Product Vitrine",
+      "description": "Beauty and cosmetic product",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "desc": { "type": "string" },
+        "price": { "type": "number" },
+        "image": { "type": "string" },
+        "stock": { "type": "integer" },
+        "category": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "stock"]
+    },
+    "ServiceItem": {
+      "title": "Esthetic Service",
+      "description": "Beauty procedure or aesthetic service",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "desc": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "string" },
+        "category": { "type": "string" },
+        "image": { "type": "string" }
+      },
+      "required": ["id", "name", "price"]
+    },
+    "Appointment": {
+      "title": "Service Booking / Appointment",
+      "description": "User reservation or order for an esthetic service",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientPhone": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "serviceName": { "type": "string" },
+        "specialistName": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDENTE", "CONFIRMADO", "REVISADO", "CANCELADO"] },
+        "customNotes": { "type": "string" },
+        "price": { "type": "number" },
+        "styleName": { "type": "string" },
+        "originalImage": { "type": "string" },
+        "generatedImage": { "type": "string" }
+      },
+      "required": ["id", "clientName", "clientEmail", "serviceName", "date", "time", "status"]
+    },
+    "StyleProposal": {
+      "title": "Style or Hair Braid Proposal",
+      "description": "AI generated portrait and visagiste simulation style design",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientPhone": { "type": "string" },
+        "clientAvatar": { "type": "string" },
+        "styleCategory": { "type": "string" },
+        "styleName": { "type": "string" },
+        "styleDesc": { "type": "string" },
+        "originalImage": { "type": "string" },
+        "generatedImage": { "type": "string" },
+        "customNotes": { "type": "string" },
+        "status": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" }
+      },
+      "required": ["id", "clientName", "styleCategory", "styleName", "originalImage", "generatedImage", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Identities and user specific setups and favorites"
+    },
+    "/posts/{postId}": {
+      "schema": "CommunityPost",
+      "description": "Local forum community discussions & articles"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Vitrine products catalog"
+    },
+    "/services/{serviceId}": {
+      "schema": "ServiceItem",
+      "description": "Cosmetics procedures checklist"
+    },
+    "/appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Orders, bookings and custom scheduling events"
+    },
+    "/style_proposals/{proposalId}": {
+      "schema": "StyleProposal",
+      "description": "Visagiste styles generated via IA from client to salon"
+    }
+  }
+}

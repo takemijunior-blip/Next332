@@ -1,0 +1,119 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny rule
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'takemijunior@gmail.com' ||
+        request.auth.token.email == 'admin@nextlady.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    // --- Users Collection ---
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId && (
+        request.resource.data.role != 'admin' ||
+        request.auth.token.email == 'takemijunior@gmail.com' ||
+        request.auth.token.email == 'admin@nextlady.com'
+      );
+      allow update: if isSignedIn() && (
+        // Self edit: Cannot change role or isBanned status
+        (request.auth.uid == userId && 
+         request.resource.data.role == resource.data.role && 
+         request.resource.data.isBanned == resource.data.isBanned) ||
+        // Admin edit (can modify points, roles, ban state)
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // --- Posts Collection (Community) ---
+    match /posts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && (
+        // Author can edit content
+        (resource.data.authorId == request.auth.uid && request.resource.data.authorId == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasAny(['title', 'content', 'image', 'category'])) ||
+        // Anyone can like or comment
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'likedBy', 'comments']) ||
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // --- Products Collection ---
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Services Collection ---
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- Appointments Collection (Bookings) ---
+    match /appointments/{appointmentId} {
+      allow read: if isSignedIn() && (
+        resource.data.clientEmail == request.auth.token.email ||
+        resource.data.clientUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.clientEmail == request.auth.token.email ||
+        request.resource.data.clientUid == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        // Client can cancel booking
+        (resource.data.clientUid == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && 
+         request.resource.data.status == 'CANCELADO') ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // --- Style Proposals Collection ---
+    match /style_proposals/{proposalId} {
+      allow read: if isSignedIn() && (
+        resource.data.clientEmail == request.auth.token.email ||
+        resource.data.clientUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.clientEmail == request.auth.token.email ||
+        request.resource.data.clientUid == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        // Client can edit customNotes
+        (resource.data.clientUid == request.auth.uid && 
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['customNotes', 'styleName'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+  }
+}

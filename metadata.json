@@ -1,0 +1,6 @@
+{
+  "name": "Next Lady",
+  "description": "Ecossistema inteligente e premium de beleza, estética, bem-estar feminino, loja online e comunidade de autocuidado guiada por IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
